@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gocolly/colly"
 )
 
@@ -12,12 +14,26 @@ type item struct {
 }
 
 func main() {
-
-	url := "https://finance.yahoo.com/quote/TSLA/cash-flow"
-
+	ticker := tickerInput()
 	// Initiate new collector
 	c := colly.NewCollector(
 		// Whitelist website for visit
 		colly.AllowedDomains("finance.yahoo.com"),
 	)
+	// Prior vist, request
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting", r.URL.String())
+	})
+
+	c.Visit("https://finance.yahoo.com/" + ticker)
+}
+
+// Obtain user ticker info.
+func tickerInput() string {
+	var input string
+	fmt.Println("Input a stock ticker to analze: ")
+	fmt.Scanln(&input)
+
+	return input
+
 }
