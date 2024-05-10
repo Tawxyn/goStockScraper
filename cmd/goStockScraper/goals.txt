@@ -1,0 +1,13 @@
+-- Route -- 
+1) Get verified pining on yahoo.finance
+2) Get correct info pulled 
+3) Calculate basic dcf caclulator
+4) Implimit user requests 
+5) Impliment error handling for incorrect tickers, or info provided 
+
+-- Future Installments -- 
+1) Have most popular stocks dcf calculated start of the stock market, end of the stock market 
+2) Host it on a website 
+3) Make it safe and reliable
+4) Provide usuability for users and get account verification 
+5) Release on reddit and try to get 25 uses! 

@@ -2,30 +2,44 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gocolly/colly"
 )
 
-type item struct {
-	Free_Cash_Flow string
-	Current_Price  string
-	Current_Low    string
-	Current_High   string
+type Item struct {
+	FCF string 'json:"FCF"'
 }
 
 func main() {
-	ticker := tickerInput()
+	//ticker := tickerInput()
 	// Initiate new collector
 	c := colly.NewCollector(
 		// Whitelist website for visit
-		colly.AllowedDomains("finance.yahoo.com"),
+		colly.AllowedDomains("www.finance.yahoo.com", "finance.yahoo.com"),
 	)
 	// Prior vist, request
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting", r.URL.String())
 	})
+	// Error Handle if not correct website ticker / other error
+	c.OnError(func(r *colly.Response, err error) {
+		log.Println("Error while scraping %s: %v\n", r.Request.URL, err)
+	})
+	c.OnResponse(func(r *colly.Response) {
+		fmt.Println("Visited", r.Request.URL)
+	})
+	// Scrape FCF
+	c.OnHTML("main div[column.svelte-1xjz32c]", func(e *colly.HTMLElement) {
+		fmt.Println("Free Cash Flow = ", e.Text)
+	})
 
-	c.Visit("https://finance.yahoo.com/" + ticker)
+	//url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/cash-flow", ticker)
+	c.Visit("https://finance.yahoo.com/quote/INTC/cash-flow")
+
+	c.OnScraped(func(r *colly.Response) {
+		fmt.Println("Finished", r.Request.URL)
+	})
 }
 
 // Obtain user ticker info.
