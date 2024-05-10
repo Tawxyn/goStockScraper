@@ -2,50 +2,64 @@ package main
 
 import (
 	"fmt"
-	"log"
+	//"log"
 
 	"github.com/gocolly/colly"
 )
 
 type Item struct {
-	FCF string 'json:"FCF"'
+	FCF_Year1 string `json:"FCF1"`
+	FCF_Year2 string `json:"FCF2"`
+	FCF_Year3 string `json:"FCF3"`
+	FCF_Year4 string `json:"FCF4"`
 }
 
 func main() {
-	//ticker := tickerInput()
+	ticker := tickerInput()
 	// Initiate new collector
 	c := colly.NewCollector(
 		// Whitelist website for visit
 		colly.AllowedDomains("www.finance.yahoo.com", "finance.yahoo.com"),
 	)
+	// User agent to not get blocked
+	// **TODO randomize prceduraly Generate user agent to not be blocked in the future.
+	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+
+	// Item Truct slice
+	items := []Item{}
 	// Prior vist, request
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting", r.URL.String())
 	})
 	// Error Handle if not correct website ticker / other error
 	c.OnError(func(r *colly.Response, err error) {
-		log.Println("Error while scraping %s: %v\n", r.Request.URL, err)
+		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
 	})
 	c.OnResponse(func(r *colly.Response) {
 		fmt.Println("Visited", r.Request.URL)
 	})
 	// Scrape FCF
-	c.OnHTML("main div[column.svelte-1xjz32c]", func(e *colly.HTMLElement) {
-		fmt.Println("Free Cash Flow = ", e.Text)
+	c.OnHTML("div.tableBody div.", func(e *colly.HTMLElement) {
+		text := e.Text
+		i := Item{
+			FCF_Year1: text,
+		}
+		items = append(items, i)
 	})
-
-	//url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/cash-flow", ticker)
-	c.Visit("https://finance.yahoo.com/quote/INTC/cash-flow")
 
 	c.OnScraped(func(r *colly.Response) {
 		fmt.Println("Finished", r.Request.URL)
 	})
+
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/cash-flow", ticker)
+	c.Visit(url)
+	fmt.Println(items)
 }
 
 // Obtain user ticker info.
 func tickerInput() string {
 	var input string
-	fmt.Println("Input a stock ticker to analze: ")
+	fmt.Print("Input a stock ticker to analze: ")
 	fmt.Scanln(&input)
 
 	return input
