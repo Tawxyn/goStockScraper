@@ -3,38 +3,46 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
+	"sync"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func main() {
-	// Load environment variables from .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
+type postgres struct {
+	db *pgxpool.Pool
+}
 
-	// Set connection point
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	} else {
-		fmt.Printf("Connected to the DB: true [" + os.Getenv("DATABASE_URL") + "] \n")
-	}
-	defer conn.Close(context.Background())
+var (
+	pgInstance *postgres
+	pgOnce     sync.Once
+)
 
-	var name string
-	var weight int64
-	err = conn.QueryRow(context.Background(), "select name, weight from widgets where id=$1", 42).Scan(&name, &weight)
-	if err != nil {
-		fmt.Printf("Connected to the DB: true\n")
-		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
-	}
+type postgres struct {
+	db *pgxpool.Pool
+}
 
-	fmt.Println(name, weight)
+var (
+	pgInstance *postgres
+	pgOnce     sync.Once
+)
+
+func NewPG(ctx context.Context, connString string) (*postgres, error) {
+	pgOnce.Do(func() {
+		db, err := pgxpool.New(ctx, connString)
+		if err != nil {
+			return fmt.Errorf("unable to create connection pool: %w", err)
+		}
+
+		pgInstance = &postgres{db}
+	})
+
+	return pgInstance, nil
+}
+
+func (pg *postgres) Ping(ctx context.Context) error {
+	return pg.db.Ping(ctx)
+}
+
+func (pg *postgres) Close() {
+	pg.db.Close()
 }
