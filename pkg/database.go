@@ -1,48 +1,26 @@
-package main
+package database
 
 import (
 	"context"
-	"fmt"
-	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type postgres struct {
-	db *pgxpool.Pool
+var pool *pgxpool.Pool
+
+func InitDatabase(connString string) error {
+	var err error
+	pool, err = pgxpool.New(context.Background(), connString)
+	return err
 }
 
-var (
-	pgInstance *postgres
-	pgOnce     sync.Once
-)
+func InsertData(ticker string, cashFlow2020, cashFlow2021, cashFlow2022, cashFlow2023 int) error {
+	query := `
+        INSERT INTO stock_cash_flow 
+            (ticker, cash_flow_2020, cash_flow_2021, cash_flow_2022, cash_flow_2023) 
+        VALUES 
+            ($1, $2, $3, $4, $5)`
 
-type postgres struct {
-	db *pgxpool.Pool
-}
-
-var (
-	pgInstance *postgres
-	pgOnce     sync.Once
-)
-
-func NewPG(ctx context.Context, connString string) (*postgres, error) {
-	pgOnce.Do(func() {
-		db, err := pgxpool.New(ctx, connString)
-		if err != nil {
-			return fmt.Errorf("unable to create connection pool: %w", err)
-		}
-
-		pgInstance = &postgres{db}
-	})
-
-	return pgInstance, nil
-}
-
-func (pg *postgres) Ping(ctx context.Context) error {
-	return pg.db.Ping(ctx)
-}
-
-func (pg *postgres) Close() {
-	pg.db.Close()
+	_, err := pool.Exec(context.Background(), query, ticker, cashFlow2020, cashFlow2021, cashFlow2022, cashFlow2023)
+	return err
 }

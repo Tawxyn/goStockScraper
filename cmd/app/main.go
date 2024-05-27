@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gocolly/colly"
-	//"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 )
 
 // Json item structure for scalability / orginization
@@ -16,6 +17,11 @@ type item struct {
 }
 
 func main() {
+	//Load environment variables from .env file
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
 
 	ticker := tickerInput()
 	// Initiate new collector
