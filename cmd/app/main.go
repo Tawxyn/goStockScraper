@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"os"
 
 	"github.com/gocolly/colly"
-	"github.com/jackc/pgx/v5"
+	//"github.com/jackc/pgx/v5"
 )
 
 // Json item structure for scalability / orginization
@@ -18,8 +16,6 @@ type item struct {
 }
 
 func main() {
-	// .env pull for pgx / DB connection
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 
 	ticker := tickerInput()
 	// Initiate new collector
@@ -31,7 +27,7 @@ func main() {
 	// **TODO** randomize prceduraly Generate user agent to not be blocked in the future.
 	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
 
-	// Item Truct slice
+	// Item sruct slice
 	items := []item{}
 	// Prior vist, request
 	c.OnRequest(func(r *colly.Request) {
