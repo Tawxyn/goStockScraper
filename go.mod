@@ -1,10 +1,10 @@
-module github.com/gocolly/colly/v2
+module github.com/Tawxyn/goStockScraper
 
 go 1.22.2
 
 require (
 	github.com/gocolly/colly v1.2.1-0.20191128122054-e910bad05231
-	github.com/jackc/pgx/v5 v5.5.5
+	github.com/jackc/pgx/v5 v5.6.0
 	github.com/joho/godotenv v1.5.1
 )
 
