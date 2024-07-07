@@ -4,29 +4,50 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Create a single instance
-var pool *pgxpool.Pool
+type postgres struct {
+	db *pgxpool.Pool
+}
+
+var (
+	pgInstance *postgres
+	pgOnce     sync.Once
+)
 
 // Initalize the database with pgxpool
-func InitDatabase(connString string) error {
+func InitDatabase(ctx context.Context, connString string) (*postgres, error) {
 	var err error
-	pool, err = pgxpool.New(context.Background(), connString)
-	return err
+
+	pgOnce.Do(func() {
+		var db *pgxpool.Pool
+		db, err = pgxpool.New(ctx, connString)
+		if err == nil {
+			pgInstance = &postgres{db}
+		}
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to create connection pool: %w", err)
+	}
+
+	return pgInstance, nil
+}
+
+func (pg *postgres) Ping(ctx context.Context) error {
+	return pg.db.Ping(ctx)
 }
 
 // Close function to shutdown gracefully
-func Close() {
-	if pool != nil {
-		pool.Close()
-	}
+func (pg *postgres) Close() {
+	pg.db.Close()
 }
 
-// Insert cashflow values for 2020 - 2023 years
-func InsertFCF(ticker string, cashFlow2020, cashFlow2021, cashFlow2022, cashFlow2023 string) error {
+// InsertFCF inserts cash flow values for 2020-2023 years
+func (pg *postgres) InsertFCF(ctx context.Context, ticker string, cashFlow2020, cashFlow2021, cashFlow2022, cashFlow2023 string) error {
 	var err error
 
 	// Convert string values to integers
@@ -55,7 +76,7 @@ func InsertFCF(ticker string, cashFlow2020, cashFlow2021, cashFlow2022, cashFlow
         VALUES 
             ($1, $2, $3, $4, $5)`
 
-	_, err = pool.Exec(context.Background(), query, ticker, cf2020, cf2021, cf2022, cf2023)
+	_, err = pg.db.Exec(ctx, query, ticker, cf2020, cf2021, cf2022, cf2023)
 	if err != nil {
 		return fmt.Errorf("failed to insert data into database: %v", err)
 	}

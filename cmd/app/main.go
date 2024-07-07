@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"time"
+
+	"strconv"
 
 	database "github.com/Tawxyn/goStockScraper/pkg"
 	"github.com/gocolly/colly"
@@ -20,6 +25,10 @@ type newItem struct {
 
 func main() {
 
+	// Create a context with a timeout of 5 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Ensure that the context is canceled when main returns
+
 	//Load environment variables from .env file
 	err := godotenv.Load("../../.env")
 	if err != nil {
@@ -30,14 +39,13 @@ func main() {
 	if connString == "" {
 		log.Fatalf("DATABASE_URL was not found in the .env or is empty")
 	}
-	fmt.Println(connString)
 
 	// Database import (pkg/database.go)
-	err = database.InitDatabase(connString)
+	pgInstance, err := database.InitDatabase(ctx, connString)
 	if err != nil {
-		log.Fatalf("Error in initializing database post .env load: %v\n", err)
+		log.Fatalf("Error initializing database post .env load: %v\n", err)
 	}
-	defer database.Close() // Close database after main exists
+	defer pgInstance.Close() // Close database after main exits
 
 	ticker := tickerInput()
 	// Initiate new collector
@@ -66,10 +74,10 @@ func main() {
 	// Scrape FCF, goes to last row of table body div, and selects chosen childs
 	c.OnHTML("div.tableBody div.row:last-of-type", func(e *colly.HTMLElement) {
 		newItem := newItem{
-			FCF_Year1: e.ChildText("div:nth-child(3)"),
-			FCF_Year2: e.ChildText("div:nth-child(4)"),
-			FCF_Year3: e.ChildText("div:nth-child(5)"),
-			FCF_Year4: e.ChildText("div:nth-child(6)"),
+			FCF_Year4: cleanAndParseFCF(e.ChildText("div:nth-child(3)")),
+			FCF_Year3: cleanAndParseFCF(e.ChildText("div:nth-child(4)")),
+			FCF_Year2: cleanAndParseFCF(e.ChildText("div:nth-child(5)")),
+			FCF_Year1: cleanAndParseFCF(e.ChildText("div:nth-child(6)")),
 		}
 		items = append(items, newItem)
 	})
@@ -82,11 +90,16 @@ func main() {
 	c.Visit(url)
 	fmt.Println(items)
 
-	database.InsertFCF(ticker, "bruh", items[0].FCF_Year2, items[0].FCF_Year3, items[0].FCF_Year4)
-	if err != nil {
-		fmt.Printf("Error insertintg data into database: %v\n", err)
+	// pgInstance to call InsertFCF and pass the context
+	if len(items) > 0 {
+		err = pgInstance.InsertFCF(ctx, ticker, items[0].FCF_Year1, items[0].FCF_Year2, items[0].FCF_Year3, items[0].FCF_Year4)
+		if err != nil {
+			fmt.Printf("Error inserting data into database: %v\n", err)
+		} else {
+			fmt.Println("Data successfully inserted")
+		}
 	} else {
-		fmt.Println("Data insert succesffuly")
+		fmt.Println("No data found to insert")
 	}
 
 }
@@ -99,4 +112,33 @@ func tickerInput() string {
 
 	return input
 
+}
+
+// Function to clean and parse FCF strings
+func cleanAndParseFCF(fcfString string) string {
+	// Remove commas from the string
+	fcfString = strings.ReplaceAll(fcfString, ",", "")
+
+	// Attempt to parse the cleaned string as a float
+	parsedFCF, err := strconv.ParseFloat(fcfString, 64)
+	if err != nil {
+		// If parsing fails, return an empty string or handle the error as needed
+		return ""
+	}
+
+	// Convert the float to a string (without decimal places)
+	return fmt.Sprintf("%.0f", parsedFCF)
+}
+
+func DCFCalc() int {
+	var input string
+	fmt.Print("Would you like to run a DCF Analysis?")
+	fmt.Scanln(&input)
+
+	if input == "no" {
+
+	} else {
+
+	}
+	return 0
 }
