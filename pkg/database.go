@@ -6,11 +6,21 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type postgres struct {
 	db *pgxpool.Pool
+}
+
+// StockCashFlow struct
+type StockCashFlow struct {
+	Ticker       string
+	CashFlow2020 int
+	CashFlow2021 int
+	CashFlow2022 int
+	CashFlow2023 int
 }
 
 var (
@@ -82,4 +92,23 @@ func (pg *postgres) InsertFCF(ctx context.Context, ticker string, cashFlow2020, 
 	}
 
 	return nil
+}
+
+func (pg *postgres) CheckTickerExists(ctx context.Context, ticker string) (bool, error) {
+	var count int
+	query := `SELECT COUNT(*)
+			  FROM stock_cash_flow
+			  WHERE ticker =$1`
+
+	// QueryRowContext executes a query that is expected to return at most one row.
+	err := pg.db.QueryRow(ctx, query, ticker).Scan(&count)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, nil // No row found for the ticker
+		}
+		return false, fmt.Errorf("error checking ticker: %v", err)
+	}
+
+	// If count > 0, the ticker exists; otherwise, it does not
+	return count > 0, nil
 }

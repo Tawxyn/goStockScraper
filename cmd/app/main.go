@@ -48,6 +48,23 @@ func main() {
 	defer pgInstance.Close() // Close database after main exits
 
 	ticker := tickerInput()
+	// Checks to see if ticker already preasent in the databse for redudancy
+	exists, err := pgInstance.CheckTickerExists(ctx, ticker)
+	if err != nil {
+		fmt.Printf("Error checking ticker: %v\n", err)
+		return
+	}
+	if exists {
+		fmt.Printf("Ticker %s exists.\n", ticker)
+		return
+
+	} else {
+		fmt.Printf("Ticker %s dsoes not exist.\n", ticker)
+	}
+
+	// Continue with your application logic here
+	fmt.Println("Continuing with application logic...")
+
 	// Initiate new collector
 	c := colly.NewCollector(
 		// Whitelist website for visit
@@ -128,17 +145,4 @@ func cleanAndParseFCF(fcfString string) string {
 
 	// Convert the float to a string (without decimal places)
 	return fmt.Sprintf("%.0f", parsedFCF)
-}
-
-func DCFCalc() int {
-	var input string
-	fmt.Print("Would you like to run a DCF Analysis?")
-	fmt.Scanln(&input)
-
-	if input == "no" {
-
-	} else {
-
-	}
-	return 0
 }
