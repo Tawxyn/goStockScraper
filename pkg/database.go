@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type postgres struct {
+type Postgres struct {
 	db *pgxpool.Pool
 }
 
@@ -24,19 +24,19 @@ type StockCashFlow struct {
 }
 
 var (
-	pgInstance *postgres
+	pgInstance *Postgres
 	pgOnce     sync.Once
 )
 
 // Initalize the database with pgxpool
-func InitDatabase(ctx context.Context, connString string) (*postgres, error) {
+func InitDatabase(ctx context.Context, connString string) (*Postgres, error) {
 	var err error
 
 	pgOnce.Do(func() {
 		var db *pgxpool.Pool
 		db, err = pgxpool.New(ctx, connString)
 		if err == nil {
-			pgInstance = &postgres{db}
+			pgInstance = &Postgres{db}
 		}
 	})
 
@@ -47,17 +47,17 @@ func InitDatabase(ctx context.Context, connString string) (*postgres, error) {
 	return pgInstance, nil
 }
 
-func (pg *postgres) Ping(ctx context.Context) error {
+func (pg *Postgres) Ping(ctx context.Context) error {
 	return pg.db.Ping(ctx)
 }
 
 // Close function to shutdown gracefully
-func (pg *postgres) Close() {
+func (pg *Postgres) Close() {
 	pg.db.Close()
 }
 
 // InsertFCF inserts cash flow values for 2020-2023 years
-func (pg *postgres) InsertFCF(ctx context.Context, ticker string, cashFlow2020, cashFlow2021, cashFlow2022, cashFlow2023 string) error {
+func (pg *Postgres) InsertFCF(ctx context.Context, ticker string, cashFlow2020, cashFlow2021, cashFlow2022, cashFlow2023 string) error {
 	var err error
 
 	// Convert string values to integers
@@ -94,7 +94,7 @@ func (pg *postgres) InsertFCF(ctx context.Context, ticker string, cashFlow2020, 
 	return nil
 }
 
-func (pg *postgres) CheckTickerExists(ctx context.Context, ticker string) (bool, error) {
+func (pg *Postgres) CheckTickerExists(ctx context.Context, ticker string) (bool, error) {
 	var count int
 	query := `SELECT COUNT(*)
 			  FROM stock_cash_flow
