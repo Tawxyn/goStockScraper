@@ -22,7 +22,8 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
-	ticker := r.URL.Query().Get("symbol")
+	ticker := r.URL.Query().Get("stockSymbol")
+
 	ctx := context.Background()
 
 	exists, err := h.db.CheckTickerExists(ctx, ticker)
@@ -36,14 +37,31 @@ func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	items, err := scraper.ScrapeFCF(ticker)
+	// Handle Cash Flow
+	cashFlowitems, err := scraper.ScrapeCashFlow(ticker)
 	if err != nil {
-		http.Error(w, "Error scraping data", http.StatusInternalServerError)
+
+		http.Error(w, "Error scraping Cash Flow Page", http.StatusInternalServerError)
 		return
 	}
 
-	if len(items) > 0 {
-		err = h.db.InsertFCF(ctx, ticker, items[0].FCF_Year1, items[0].FCF_Year2, items[0].FCF_Year3, items[0].FCF_Year4)
+	incomeStatementItems, err := scraper.ScrapeIncomeStatement(ticker)
+	if err != nil {
+
+		http.Error(w, "Error scraping Income Statement", http.StatusInternalServerError)
+		return
+	}
+
+	toalDebtItems, err := scraper.ScrapeBalanceSheet(ticker)
+	if err != nil {
+
+		http.Error(w, "Error scraping Balance Sheet", http.StatusInternalServerError)
+		return
+	}
+
+	if len(cashFlowitems) > 0 && len(incomeStatementItems) > 0 && len(totalDebtItems) > 0 {
+		err = h.db.InsertFCF(ctx, ticker, cashFlowitems[0].FCF_Year1, cashFlowitems[0].FCF_Year2, cashFlowitems[0].FCF_Year3,
+			cashFlowitems[0].FCF_Year4, incomeStatementItems[0].Interest_Expense, totalDebtItems[0].Total_Debt)
 		if err != nil {
 			http.Error(w, "Error inserting data", http.StatusInternalServerError)
 		} else {

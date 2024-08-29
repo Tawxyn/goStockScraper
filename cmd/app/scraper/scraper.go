@@ -10,13 +10,20 @@ import (
 
 // Json item structure for scalability / orginization
 type newItem struct {
+	// Cash Flows
 	FCF_Year1 string `json:"FCF1"`
 	FCF_Year2 string `json:"FCF2"`
 	FCF_Year3 string `json:"FCF3"`
 	FCF_Year4 string `json:"FCF4"`
+
+	// Income Statements
+	Interest_Expense string `json:"Interest_Expense"`
+
+	// Balance Sheet
+	Total_Debt string `json:"Total_Debt"`
 }
 
-func ScrapeFCF(ticker string) ([]newItem, error) {
+func ScrapeCashFlow(ticker string) ([]newItem, error) {
 
 	// Continue with your application logic here
 	fmt.Println("Continuing with application logic...")
@@ -34,7 +41,7 @@ func ScrapeFCF(ticker string) ([]newItem, error) {
 	var items []newItem
 	// Prior vist, request
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL.String())
+		fmt.Println("Visiting // Cash Flow", r.URL.String())
 	})
 	// Error Handle if not correct website ticker / other error
 	c.OnError(func(r *colly.Response, err error) {
@@ -56,10 +63,98 @@ func ScrapeFCF(ticker string) ([]newItem, error) {
 	})
 	// Confirmed vist and done filling out OnHTML callback
 	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished", r.Request.URL)
+		fmt.Println("Finished // Cash Flow", r.Request.URL)
 	})
 	// URL setup from User input
 	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/cash-flow", ticker)
+	err := c.Visit(url)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+
+}
+
+func ScrapeIncomeStatement(ticker string) ([]newItem, error) {
+
+	c := colly.NewCollector(
+
+		colly.AllowedDomains("www.finance.yahoo.com", "finance.yahoo.com"),
+	)
+
+	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+
+	var items []newItem
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting // Income Statement", r.URL.String())
+	})
+
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+	})
+
+	c.OnResponse(func(r *colly.Response) {
+		fmt.Println("Visited", r.Request.URL)
+	})
+
+	c.OnHTML("div.tableBody div.row:nth-child(21)", func(e *colly.HTMLElement) {
+		newItem := newItem{
+			Interest_Expense: cleanAndParseFCF(e.ChildText("div:nth-child(3)")),
+		}
+		items = append(items, newItem)
+	})
+
+	c.OnScraped(func(r *colly.Response) {
+		fmt.Println("Finished // Income Statement", r.Request.URL)
+	})
+	// URL setup from User input
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/financials/", ticker)
+	err := c.Visit(url)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+
+}
+
+func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
+
+	c := colly.NewCollector(
+
+		colly.AllowedDomains("www.finance.yahoo.com", "finance.yahoo.com"),
+	)
+
+	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+
+	var items []newItem
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting // Balance Sheet", r.URL.String())
+	})
+
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+	})
+
+	c.OnResponse(func(r *colly.Response) {
+		fmt.Println("Visited", r.Request.URL)
+	})
+
+	c.OnHTML("div.tableBody div.row:nth-child(21)", func(e *colly.HTMLElement) {
+		newItem := newItem{
+			Total_Debt: cleanAndParseFCF(e.ChildText("div:nth-child(3)")),
+		}
+		items = append(items, newItem)
+	})
+
+	c.OnScraped(func(r *colly.Response) {
+		fmt.Println("Finished // Balance Sheet", r.Request.URL)
+	})
+	// URL setup from User input
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/balance-sheet/", ticker)
 	err := c.Visit(url)
 	if err != nil {
 		return nil, err
@@ -83,12 +178,4 @@ func cleanAndParseFCF(fcfString string) string {
 
 	// Convert the float to a string (without decimal places)
 	return fmt.Sprintf("%.0f", parsedFCF)
-}
-
-func DCFCalculator() string {
-	var input string
-	fmt.Print("Input a ticker to calculate discounted free cash flow: ")
-	fmt.Scanln(&input)
-
-	return input
 }
