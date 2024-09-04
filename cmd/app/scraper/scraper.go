@@ -41,7 +41,7 @@ func ScrapeCashFlow(ticker string) ([]newItem, error) {
 	var items []newItem
 	// Prior vist, request
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting // Cash Flow", r.URL.String())
+		fmt.Println("// Cash Flow // Visiting", r.URL.String())
 	})
 	// Error Handle if not correct website ticker / other error
 	c.OnError(func(r *colly.Response, err error) {
@@ -49,7 +49,7 @@ func ScrapeCashFlow(ticker string) ([]newItem, error) {
 	})
 	// Confirm Response
 	c.OnResponse(func(r *colly.Response) {
-		fmt.Println("Visited", r.Request.URL)
+		fmt.Println("// Cash Flow // Visited", r.Request.URL)
 	})
 	// Scrape FCF, goes to last row of table body div, and selects chosen childs
 	c.OnHTML("div.tableBody div.row:last-of-type", func(e *colly.HTMLElement) {
@@ -63,7 +63,8 @@ func ScrapeCashFlow(ticker string) ([]newItem, error) {
 	})
 	// Confirmed vist and done filling out OnHTML callback
 	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished // Cash Flow", r.Request.URL)
+		fmt.Println("// Cash Flow // Finished", r.Request.URL)
+		fmt.Println()
 	})
 	// URL setup from User input
 	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/cash-flow", ticker)
@@ -88,7 +89,7 @@ func ScrapeIncomeStatement(ticker string) ([]newItem, error) {
 	var items []newItem
 
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting // Income Statement", r.URL.String())
+		fmt.Println("// Income Statement // Visiting", r.URL.String())
 	})
 
 	c.OnError(func(r *colly.Response, err error) {
@@ -96,7 +97,7 @@ func ScrapeIncomeStatement(ticker string) ([]newItem, error) {
 	})
 
 	c.OnResponse(func(r *colly.Response) {
-		fmt.Println("Visited", r.Request.URL)
+		fmt.Println("// Income Statement // Visited", r.Request.URL)
 	})
 
 	c.OnHTML("div.tableBody div.row:nth-child(21)", func(e *colly.HTMLElement) {
@@ -107,7 +108,8 @@ func ScrapeIncomeStatement(ticker string) ([]newItem, error) {
 	})
 
 	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished // Income Statement", r.Request.URL)
+		fmt.Println("// Income Statement // Finished", r.Request.URL)
+		fmt.Println()
 	})
 	// URL setup from User input
 	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/financials/", ticker)
@@ -132,7 +134,7 @@ func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
 	var items []newItem
 
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting // Balance Sheet", r.URL.String())
+		fmt.Println("// Balance Sheet // Visiting ", r.URL.String())
 	})
 
 	c.OnError(func(r *colly.Response, err error) {
@@ -140,7 +142,7 @@ func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
 	})
 
 	c.OnResponse(func(r *colly.Response) {
-		fmt.Println("Visited", r.Request.URL)
+		fmt.Println("// Balance Sheet // Visited", r.Request.URL)
 	})
 
 	c.OnHTML("div.tableBody div.row:nth-child(21)", func(e *colly.HTMLElement) {
@@ -151,7 +153,8 @@ func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
 	})
 
 	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished // Balance Sheet", r.Request.URL)
+		fmt.Println("// Balance Sheet // Finished", r.Request.URL)
+		fmt.Println()
 	})
 	// URL setup from User input
 	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/balance-sheet/", ticker)

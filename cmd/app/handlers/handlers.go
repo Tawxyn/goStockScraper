@@ -52,7 +52,7 @@ func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	toalDebtItems, err := scraper.ScrapeBalanceSheet(ticker)
+	totalDebtItems, err := scraper.ScrapeBalanceSheet(ticker)
 	if err != nil {
 
 		http.Error(w, "Error scraping Balance Sheet", http.StatusInternalServerError)
