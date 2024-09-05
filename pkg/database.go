@@ -101,7 +101,7 @@ func (pg *Postgres) InsertFCF(ctx context.Context, ticker string, cashFlow2020, 
         INSERT INTO stock_info 
             (ticker, cash_flow_2020, cash_flow_2021, cash_flow_2022, cash_flow_2023, interest_expense, total_debt) 
         VALUES 
-            ($1, $2, $3, $4, $5, $6)`
+            ($1, $2, $3, $4, $5, $6, $7)`
 
 	_, err = pg.db.Exec(ctx, query, ticker, cf2020, cf2021, cf2022, cf2023, interestexpense, totaldebt)
 	if err != nil {
