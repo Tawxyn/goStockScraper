@@ -145,11 +145,29 @@ func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
 		fmt.Println("// Balance Sheet // Visited", r.Request.URL)
 	})
 
-	c.OnHTML("div.tableBody div.row:nth-child(10)", func(e *colly.HTMLElement) {
-		newItem := newItem{
-			Total_Debt: cleanAndParseFCF(e.ChildText("div:nth-child(2)")),
+	c.OnHTML("div.tableBody", func(e *colly.HTMLElement) {
+		keyWord := "Total Debt"
+
+		tenthRowText := e.ChildText("div.row:nth-child(10)")
+		eleventhRowText := e.ChildText("div:nth-child(11)")
+
+		if strings.Contains(tenthRowText, keyWord) {
+
+			newItem := newItem{
+				Total_Debt: cleanAndParseFCF(e.ChildText("div.nth-child(2)")),
+			}
+			items = append(items, newItem)
+
 		}
-		items = append(items, newItem)
+
+		if strings.Contains(eleventhRowText, keyWord) {
+
+			newItem := newItem{
+				Total_Debt: cleanAndParseFCF(e.ChildText("div.nth-child(2)")),
+			}
+			items = append(items, newItem)
+
+		}
 	})
 
 	c.OnScraped(func(r *colly.Response) {
