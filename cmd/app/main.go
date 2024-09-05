@@ -39,7 +39,7 @@ func main() {
 	// Pass the database instance to the handlers
 	handler := handlers.NewHandler(pgInstance)
 
-	fs := http.FileServer(http.Dir("views/css")) // Adjust the directory path if needed
+	fs := http.FileServer(http.Dir("views/css"))
 
 	// Define HTTP routes
 	http.Handle("/css/", http.StripPrefix("/css/", fs))
