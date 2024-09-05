@@ -143,9 +143,9 @@ func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
 		fmt.Println("Visited", r.Request.URL)
 	})
 
-	c.OnHTML("div.tableBody div.row:nth-child(21)", func(e *colly.HTMLElement) {
+	c.OnHTML("div.tableBody div.row:nth-child(10)", func(e *colly.HTMLElement) {
 		newItem := newItem{
-			Total_Debt: cleanAndParseFCF(e.ChildText("div:nth-child(3)")),
+			Total_Debt: cleanAndParseFCF(e.ChildText("div:nth-child(2)")),
 		}
 		items = append(items, newItem)
 	})
@@ -172,7 +172,7 @@ func cleanAndParseFCF(fcfString string) string {
 	// Attempt to parse the cleaned string as a float
 	parsedFCF, err := strconv.ParseFloat(fcfString, 64)
 	if err != nil {
-		// If parsing fails, return an empty string or handle the error as needed
+		// If parsing fails, return an empty string
 		return ""
 	}
 

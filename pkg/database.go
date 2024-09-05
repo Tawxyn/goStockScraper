@@ -98,7 +98,7 @@ func (pg *Postgres) InsertFCF(ctx context.Context, ticker string, cashFlow2020, 
 		return fmt.Errorf("failed to convert TotalDebt2023 to integer: %v", err)
 	}
 	query := `
-        INSERT INTO stock_cash_flow 
+        INSERT INTO stock_info 
             (ticker, cash_flow_2020, cash_flow_2021, cash_flow_2022, cash_flow_2023, interest_expense, total_debt) 
         VALUES 
             ($1, $2, $3, $4, $5, $6)`
@@ -114,7 +114,7 @@ func (pg *Postgres) InsertFCF(ctx context.Context, ticker string, cashFlow2020, 
 func (pg *Postgres) CheckTickerExists(ctx context.Context, ticker string) (bool, error) {
 	var count int
 	query := `SELECT COUNT(*)
-			  FROM stock_cash_flow
+			  FROM stock_info
 			  WHERE ticker =$1`
 
 	// QueryRowContext executes a query that is expected to return at most one row.
