@@ -146,28 +146,35 @@ func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
 	})
 
 	c.OnHTML("div.tableBody", func(e *colly.HTMLElement) {
-		keyWord := "Total Debt"
 
-		tenthRowText := e.ChildText("div.row:nth-child(10)")
-		eleventhRowText := e.ChildText("div:nth-child(11)")
+		// Iterate over each row
+		e.ForEach("div.row", func(i int, row *colly.HTMLElement) {
 
-		if strings.Contains(tenthRowText, keyWord) {
+			// Check for the rowTitle with the desired title
+			rowTitle := row.DOM.Find("div.rowTitle")
+			titleAttr := rowTitle.AttrOr("title", "")
 
-			newItem := newItem{
-				Total_Debt: cleanAndParseFCF(e.ChildText("div.nth-child(2)")),
+			if titleAttr == "Total Debt" {
+
+				// Find the next column div and get its text
+				columns := row.DOM.Find("div.column")
+				if columns.Length() > 1 {
+					nextColumn := columns.Eq(1) // Get the second column
+					nextColumnText := nextColumn.Text()
+					totalDebtValue := cleanAndParseFCF(nextColumnText)
+
+					// Set value to strut
+					newItem := newItem{
+						Total_Debt: totalDebtValue,
+					}
+					items = append(items, newItem)
+				} else {
+					fmt.Println("Nothing in next row")
+				}
+			} else {
+				fmt.Println("Not the target row")
 			}
-			items = append(items, newItem)
-
-		}
-
-		if strings.Contains(eleventhRowText, keyWord) {
-
-			newItem := newItem{
-				Total_Debt: cleanAndParseFCF(e.ChildText("div.nth-child(2)")),
-			}
-			items = append(items, newItem)
-
-		}
+		})
 	})
 
 	c.OnScraped(func(r *colly.Response) {
@@ -187,16 +194,16 @@ func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
 
 // Function to clean and parse FCF strings
 func cleanAndParseFCF(fcfString string) string {
-	// Remove commas from the string
+	// Remove commas and trim spaces
 	fcfString = strings.ReplaceAll(fcfString, ",", "")
+	fcfString = strings.TrimSpace(fcfString)
 
-	// Attempt to parse the cleaned string as a float
+	// Parse the cleaned string as a float
 	parsedFCF, err := strconv.ParseFloat(fcfString, 64)
 	if err != nil {
-		// If parsing fails, return an empty string
+		fmt.Printf("Parsing error: %v\n", err)
 		return ""
 	}
 
-	// Convert the float to a string (without decimal places)
 	return fmt.Sprintf("%.0f", parsedFCF)
 }
