@@ -9,7 +9,6 @@ import (
 
 	handlers "github.com/Tawxyn/goStockScraper/cmd/app/handlers"
 	database "github.com/Tawxyn/goStockScraper/pkg"
-	"github.com/a-h/templ"
 	"github.com/joho/godotenv"
 )
 
@@ -41,12 +40,9 @@ func main() {
 	handler := handlers.NewHandler(pgInstance)
 
 	fs := http.FileServer(http.Dir("views/css"))
-	
 
 	// Define HTTP routes
-	http.Handle()
 	http.Handle("/css/", http.StripPrefix("/css/", fs))
-	http.Handle("/", templ.Handler(component))
 	http.HandleFunc("/", handler.HomeHandler)
 	http.HandleFunc("/analyze", handler.AnalyzeHandler)
 
