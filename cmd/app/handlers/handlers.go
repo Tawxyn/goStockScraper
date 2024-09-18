@@ -18,7 +18,7 @@ func NewHandler(db *database.Postgres) *Handler {
 }
 
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "../../views/index.html")
+	http.ServeFile(w, r, "views/index.html")
 }
 
 func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {

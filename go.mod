@@ -3,7 +3,7 @@ module github.com/Tawxyn/goStockScraper
 go 1.22.2
 
 require (
-	github.com/a-h/templ v0.2.771
+	github.com/a-h/templ v0.2.778
 	github.com/gocolly/colly v1.2.1-0.20191128122054-e910bad05231
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v5 v5.6.0

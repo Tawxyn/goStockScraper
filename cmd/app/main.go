@@ -9,6 +9,8 @@ import (
 
 	handlers "github.com/Tawxyn/goStockScraper/cmd/app/handlers"
 	database "github.com/Tawxyn/goStockScraper/pkg"
+	views "github.com/Tawxyn/goStockScraper/views"
+	"github.com/a-h/templ"
 	"github.com/joho/godotenv"
 )
 
@@ -19,7 +21,7 @@ func main() {
 	defer cancel() // Ensure that the context is canceled when main returns
 
 	//Load environment variables from .env file
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v\n", err)
 	}
@@ -40,6 +42,9 @@ func main() {
 	handler := handlers.NewHandler(pgInstance)
 
 	fs := http.FileServer(http.Dir("views/css"))
+
+	component := views.Show("Mike")
+	http.Handle("/testing", templ.Handler(component))
 
 	// Define HTTP routes
 	http.Handle("/css/", http.StripPrefix("/css/", fs))
