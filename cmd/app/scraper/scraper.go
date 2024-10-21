@@ -18,9 +18,14 @@ type newItem struct {
 
 	// Income Statements
 	Interest_Expense string `json:"Interest_Expense"`
+	Pretax_Income    string `json:"Pretax_Income"`
 
 	// Balance Sheet
 	Total_Debt string `json:"Total_Debt"`
+
+	// Summary Sheet
+	Beta       string `json:"Beta"`
+	Market_Cap string `json:"Market_Cap"`
 }
 
 func ScrapeCashFlow(ticker string) ([]newItem, error) {
@@ -100,9 +105,10 @@ func ScrapeIncomeStatement(ticker string) ([]newItem, error) {
 		fmt.Println("// Income Statement // Visited", r.Request.URL)
 	})
 
-	c.OnHTML("div.tableBody div.row:nth-child(21)", func(e *colly.HTMLElement) {
+	c.OnHTML("div.tableBody", func(e *colly.HTMLElement) {
 		newItem := newItem{
-			Interest_Expense: cleanAndParseFCF(e.ChildText("div:nth-child(3)")),
+			Interest_Expense: cleanAndParseFCF(e.ChildText("div.row:nth-child(21) div:nth-child(3)")),
+			Pretax_Income:    cleanAndParseFCF(e.ChildText("div.row:nth-child(8) div:nth-child(3)")),
 		}
 		items = append(items, newItem)
 	})
@@ -192,6 +198,55 @@ func ScrapeBalanceSheet(ticker string) ([]newItem, error) {
 
 }
 
+func ScrapeSummary(ticker string) ([]newItem, error) {
+
+	// Initiate new collector
+	c := colly.NewCollector(
+		// Whitelist website for visit
+		colly.AllowedDomains("www.finance.yahoo.com", "finance.yahoo.com"),
+	)
+	// User agent to not get blocked
+	// **TODO** randomize prceduraly Generate user agent to not be blocked in the future.
+	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+
+	// Item sruct slice
+	var items []newItem
+	// Prior vist, request
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("// Summary // Visiting", r.URL.String())
+	})
+	// Error Handle if not correct website ticker / other error
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+	})
+	// Confirm Response
+	c.OnResponse(func(r *colly.Response) {
+		fmt.Println("// Summary // Visited", r.Request.URL)
+	})
+	// Scrape FCF, goes to last row of table body div, and selects chosen childs
+	c.OnHTML("div.yf-mrt107", func(e *colly.HTMLElement) {
+		newItem := newItem{
+			Beta:       cleanAndParseFCF(e.ChildText("li.yf-mrt107:nth-child(10) > span:nth-child(2)")),
+			Market_Cap: detectMarketCap((e.ChildText("li.yf-mrt107:nth-child(9) > span:nth-child(2) > fin-streamer:nth-child(1)"))),
+		}
+		items = append(items, newItem)
+	})
+	// Confirmed vist and done filling out OnHTML callback
+	c.OnScraped(func(r *colly.Response) {
+		fmt.Println("// Summary // Finished", r.Request.URL)
+		fmt.Println()
+	})
+	// URL setup from User input
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s", ticker)
+	err := c.Visit(url)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+
+}
+
 // Function to clean and parse FCF strings
 func cleanAndParseFCF(fcfString string) string {
 	// Remove commas and trim spaces
@@ -205,5 +260,30 @@ func cleanAndParseFCF(fcfString string) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%.0f", parsedFCF)
+	return fmt.Sprintf("%.2f", parsedFCF)
+}
+
+// Function to detect Market Cap is in trillions(T), billions(B), millions(M)
+
+func detectMarketCap(marketCap string) string {
+
+	trimmed := marketCap[:len(marketCap)-1]
+	floatMarketCap, err := strconv.ParseFloat(trimmed, 64)
+	if err != nil {
+		fmt.Printf("Parsing error: %v\n", err)
+		return ""
+	}
+	if strings.Contains(marketCap, "T") {
+		fmt.Println(floatMarketCap)
+		return fmt.Sprintf("%.0f", floatMarketCap*1000000000000)
+	}
+	if strings.Contains(marketCap, "B") {
+		fmt.Println(floatMarketCap)
+		return fmt.Sprintf("%.0f", floatMarketCap*1000000000)
+	}
+	if strings.Contains(marketCap, "M") {
+		fmt.Println(floatMarketCap)
+		return fmt.Sprintf("%.0f", floatMarketCap*1000000)
+	}
+	return fmt.Sprintf("%.0f", floatMarketCap)
 }

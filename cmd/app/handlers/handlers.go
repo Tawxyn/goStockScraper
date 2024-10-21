@@ -59,9 +59,17 @@ func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(cashFlowitems) > 0 && len(incomeStatementItems) > 0 && len(totalDebtItems) > 0 {
+	summaryitems, err := scraper.ScrapeSummary(ticker)
+	if err != nil {
+
+		http.Error(w, "Error scraping Cash Flow Page", http.StatusInternalServerError)
+		return
+	}
+
+	if len(cashFlowitems) > 0 && len(incomeStatementItems) > 0 && len(totalDebtItems) > 0 && len(summaryitems) > 0 {
 		err = h.db.InsertFCF(ctx, ticker, cashFlowitems[0].FCF_Year1, cashFlowitems[0].FCF_Year2, cashFlowitems[0].FCF_Year3,
-			cashFlowitems[0].FCF_Year4, incomeStatementItems[0].Interest_Expense, totalDebtItems[0].Total_Debt)
+			cashFlowitems[0].FCF_Year4, incomeStatementItems[0].Interest_Expense, totalDebtItems[0].Total_Debt, incomeStatementItems[0].Pretax_Income,
+			summaryitems[0].Beta, summaryitems[0].Market_Cap)
 		if err != nil {
 			http.Error(w, "Error inserting data", http.StatusInternalServerError)
 		} else {
