@@ -155,7 +155,7 @@ func (pg *Postgres) CheckTickerExists(ctx context.Context, ticker string) (bool,
 	return count > 0, nil
 }
 
-func (pg *Postgres) exportFinancials(ctx context.Context, ticker string) (*StockData, error) {
+func (pg *Postgres) GetFinancials(ctx context.Context, ticker string) (*StockData, error) {
 
 	financialData := &StockData{}
 

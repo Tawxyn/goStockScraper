@@ -48,9 +48,12 @@ func ScrapeCashFlow(ticker string) ([]newItem, error) {
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("// Cash Flow // Visiting", r.URL.String())
 	})
+	fmt.Println("Moving on to Requesting")
+	fmt.Printf("Attempting to scrape data for ticker: %s\n", ticker)
+
 	// Error Handle if not correct website ticker / other error
 	c.OnError(func(r *colly.Response, err error) {
-		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+		fmt.Printf("Request URL: %s failed with status code: %d, error: %v\n", r.Request.URL, r.StatusCode, err)
 	})
 	// Confirm Response
 	c.OnResponse(func(r *colly.Response) {

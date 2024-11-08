@@ -5,16 +5,22 @@ import (
 	"fmt"
 	"net/http"
 
+	calc "github.com/Tawxyn/goStockScraper/cmd/app/dcf"
 	scraper "github.com/Tawxyn/goStockScraper/cmd/app/scraper"
 	database "github.com/Tawxyn/goStockScraper/pkg"
+	"golang.org/x/text/cases"
 )
 
 type Handler struct {
-	db *database.Postgres
+	db               *database.Postgres
+	FinancialService *calc.FinancialService
 }
 
-func NewHandler(db *database.Postgres) *Handler {
-	return &Handler{db: db}
+func NewHandler(db *database.Postgres, financialService *calc.FinancialService) *Handler {
+	return &Handler{
+		db:               db,
+		FinancialService: financialService,
+	}
 }
 
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -77,5 +83,49 @@ func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		fmt.Fprintln(w, "No data found to insert")
+	}
+}
+
+func (h *Handler) CalculateWAAC(w http.ResponseWriter, r *http.Request) {
+	ticker := r.URL.Query().Get("stockSymbol")
+
+	err := h.FinancialService.CalculateWAAC(ticker)
+	if err != nil {
+
+		http.Error(w, "Error with calculating WAAC", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "Financial data for %s has been printed to the logs.", ticker)
+}
+
+// User Handler logic
+func signInUser(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func signUpUser(w http.ResponseWriter, r *http.Request) {
+	
+}
+
+func getUser(r *http.Request) {
+	email:= r.FormValue(key:"email")
+	password := r.FormValue(key:"password")
+	return User {
+		Email: email,
+		Password: password,
+	}
+}
+
+func userHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
+	case "/sign-in":
+		signInUser(w, r)
+	case "/sign-up":
+		signUpUser(w, r)
+	case "sign-in-form":
+		getSignInPage(w, r)
+	case "sign-up-form":
+		getSignUpPage(w, r)
 	}
 }

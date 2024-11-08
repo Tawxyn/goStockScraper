@@ -7,10 +7,9 @@ import (
 	"os"
 	"time"
 
+	calc "github.com/Tawxyn/goStockScraper/cmd/app/dcf"
 	handlers "github.com/Tawxyn/goStockScraper/cmd/app/handlers"
 	database "github.com/Tawxyn/goStockScraper/pkg"
-	views "github.com/Tawxyn/goStockScraper/views"
-	"github.com/a-h/templ"
 	"github.com/joho/godotenv"
 )
 
@@ -20,7 +19,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel() // Ensure that the context is canceled when main returns
 
-	//Load environment variables from .env file
+	//  Load environment variables from .env file
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v\n", err)
@@ -38,18 +37,19 @@ func main() {
 	}
 	defer pgInstance.Close() // Close database after main exits
 
+	// Create an instance of FinancialService
+	financialService := calc.NewFinancialService(pgInstance)
+
 	// Pass the database instance to the handlers
-	handler := handlers.NewHandler(pgInstance)
+	handler := handlers.NewHandler(pgInstance, financialService)
 
 	fs := http.FileServer(http.Dir("views/css"))
-
-	component := views.Show("Mike")
-	http.Handle("/testing", templ.Handler(component))
 
 	// Define HTTP routes
 	http.Handle("/css/", http.StripPrefix("/css/", fs))
 	http.HandleFunc("/", handler.HomeHandler)
 	http.HandleFunc("/analyze", handler.AnalyzeHandler)
+	http.HandleFunc("/CalculateWAAC", handler.CalculateWAAC)
 
 	// State HTTP Server
 	log.Fatal(http.ListenAndServe(":8080", nil))
