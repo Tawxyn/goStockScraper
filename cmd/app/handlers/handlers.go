@@ -3,12 +3,13 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	calc "github.com/Tawxyn/goStockScraper/cmd/app/dcf"
 	scraper "github.com/Tawxyn/goStockScraper/cmd/app/scraper"
+	users "github.com/Tawxyn/goStockScraper/cmd/users"
 	database "github.com/Tawxyn/goStockScraper/pkg"
-	"golang.org/x/text/cases"
 )
 
 type Handler struct {
@@ -99,20 +100,39 @@ func (h *Handler) CalculateWAAC(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Financial data for %s has been printed to the logs.", ticker)
 }
 
-// User Handler logic
-func signInUser(w http.ResponseWriter, r *http.Request) {
+// User Handler logic with templating
 
+func (h *Handler) UserHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "views/login.html")
+}
+
+func getSignInPage(w http.ResponseWriter, r *http.Request) {
+	templating(w, "sign-in.html", nil)
+}
+
+func getSignUpPage(w http.ResponseWriter, r *http.Request) {
+	templating(w, "sign-up.html", nil)
+}
+
+func templating(w http.ResponseWriter, fileName string, data interface{}) {
+	t, _ := template.ParseFiles(fileName)
+	t.ExecuteTemplate(w, fileName, data)
+}
+
+func signInUser(w http.ResponseWriter, r *http.Request) {
+	newUser := getUser(r)
+	users.DefaultUserService.CreateUser(newUser)
 }
 
 func signUpUser(w http.ResponseWriter, r *http.Request) {
-	
+
 }
 
-func getUser(r *http.Request) {
-	email:= r.FormValue(key:"email")
-	password := r.FormValue(key:"password")
-	return User {
-		Email: email,
+func getUser(r *http.Request) users.User {
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	return users.User{
+		Email:    email,
 		Password: password,
 	}
 }

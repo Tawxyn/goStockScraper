@@ -47,6 +47,7 @@ func main() {
 
 	// Define HTTP routes
 	http.Handle("/css/", http.StripPrefix("/css/", fs))
+	http.HandleFunc("/user", handler.UserHandler)
 	http.HandleFunc("/", handler.HomeHandler)
 	http.HandleFunc("/analyze", handler.AnalyzeHandler)
 	http.HandleFunc("/CalculateWAAC", handler.CalculateWAAC)
