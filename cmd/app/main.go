@@ -43,10 +43,10 @@ func main() {
 	// Pass the database instance to the handlers
 	handler := handlers.NewHandler(pgInstance, financialService)
 
-	fs := http.FileServer(http.Dir("views/css"))
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	// Define HTTP routes
-	http.Handle("/css/", http.StripPrefix("/css/", fs))
 	http.HandleFunc("/user", handler.UserHandler)
 	http.HandleFunc("/", handler.HomeHandler)
 	http.HandleFunc("/analyze", handler.AnalyzeHandler)
