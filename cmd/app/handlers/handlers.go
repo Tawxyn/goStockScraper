@@ -31,10 +31,17 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 	ticker := r.URL.Query().Get("stockSymbol")
 
+	if ticker == "" {
+		http.Error(w, "Missing stockSymbol parameter", http.StatusBadRequest)
+		return
+	}
+
 	ctx := context.Background()
 
+	// Check if the ticker exists in the database
 	exists, err := h.db.CheckTickerExists(ctx, ticker)
 	if err != nil {
+		fmt.Println("Database error in CheckTickerExists:", err) // Debugging
 		http.Error(w, "Error checking ticker", http.StatusInternalServerError)
 		return
 	}
@@ -44,31 +51,31 @@ func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Handle Cash Flow
+	// Scrape finanical data
 	cashFlowitems, err := scraper.ScrapeCashFlow(ticker)
 	if err != nil {
-
+		fmt.Println("Error scraping Cash Flow:", err) // Debugging
 		http.Error(w, "Error scraping Cash Flow Page", http.StatusInternalServerError)
 		return
 	}
 
 	incomeStatementItems, err := scraper.ScrapeIncomeStatement(ticker)
 	if err != nil {
-
+		fmt.Println("Error scraping Income Statement:", err) // Debugging
 		http.Error(w, "Error scraping Income Statement", http.StatusInternalServerError)
 		return
 	}
 
 	totalDebtItems, err := scraper.ScrapeBalanceSheet(ticker)
 	if err != nil {
-
+		fmt.Println("Error scraping Balance Sheet:", err) // Debugging
 		http.Error(w, "Error scraping Balance Sheet", http.StatusInternalServerError)
 		return
 	}
 
 	summaryitems, err := scraper.ScrapeSummary(ticker)
 	if err != nil {
-
+		fmt.Println("Error scraping Summary:", err) // Debugging
 		http.Error(w, "Error scraping Cash Flow Page", http.StatusInternalServerError)
 		return
 	}
@@ -78,6 +85,7 @@ func (h *Handler) AnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 			cashFlowitems[0].FCF_Year4, incomeStatementItems[0].Interest_Expense, totalDebtItems[0].Total_Debt, incomeStatementItems[0].Pretax_Income,
 			summaryitems[0].Beta, summaryitems[0].Market_Cap)
 		if err != nil {
+			fmt.Println("Database Insert Error:", err) // Debugging
 			http.Error(w, "Error inserting data", http.StatusInternalServerError)
 		} else {
 			fmt.Fprintln(w, "Data successfully inserted")
