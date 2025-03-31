@@ -50,3 +50,9 @@ go mod download
 # Configure environment
 cp .env.example .env
 # Edit .env with your database credentials
+```
+## Database Setup
+    Create a PostgreSQL database
+
+    Update the .env file: 
+    DATABASE_URL="postgres://username:password@localhost:5432/dbname?sslmode=disable"
