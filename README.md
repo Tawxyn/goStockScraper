@@ -52,7 +52,23 @@ cp .env.example .env
 # Edit .env with your database credentials
 ```
 ## Database Setup
-    Create a PostgreSQL database
+Create a PostgreSQL database
 
-    Update the .env file: 
-    DATABASE_URL="postgres://username:password@localhost:5432/dbname?sslmode=disable"
+Update the .env file: 
+DATABASE_URL="postgres://username:password@localhost:5432/dbname?sslmode=disable"
+
+## Running the Application
+```
+# Development mode
+go run cmd/main.go
+
+# Production build
+go build -o bin/goStockScraper cmd/main.go
+./bin/goStockScraper
+```
+API Documentation
+Endpoints
+Endpoint	Method	Description	Parameters
+/analyze	GET	Full financial analysis	stockSymbol (required)
+/CalculateWAAC	POST	WACC calculation	JSON payload
+/user	GET	User management endpoint	-
