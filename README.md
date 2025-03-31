@@ -73,3 +73,5 @@ go build -o bin/goStockScraper cmd/main.go
 | `/analyze`       | GET    | Full financial analysis       | `stockSymbol` (required) |
 | `/CalculateWAAC` | POST   | WACC calculation              | JSON payload         |
 | `/user`          | GET    | User management endpoint      | -                    |
+
+Note: This project is intended for educational purposes only. Use of Yahoo Finance data must comply with their Terms of Service.
