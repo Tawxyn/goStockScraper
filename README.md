@@ -66,9 +66,10 @@ go run cmd/main.go
 go build -o bin/goStockScraper cmd/main.go
 ./bin/goStockScraper
 ```
-API Documentation
-Endpoints
-Endpoint	Method	Description	Parameters
-/analyze	GET	Full financial analysis	stockSymbol (required)
-/CalculateWAAC	POST	WACC calculation	JSON payload
-/user	GET	User management endpoint	-
+## API Endpoints
+
+| Endpoint         | Method | Description                  | Parameters           |
+|------------------|--------|------------------------------|----------------------|
+| `/analyze`       | GET    | Full financial analysis       | `stockSymbol` (required) |
+| `/CalculateWAAC` | POST   | WACC calculation              | JSON payload         |
+| `/user`          | GET    | User management endpoint      | -                    |
